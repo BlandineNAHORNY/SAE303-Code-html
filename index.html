@@ -10,17 +10,17 @@
     body {
       display: flex;
       flex-direction: column; /* Organiser les éléments en colonne */
-      justify-content: center; /* Centrer verticalement */
       align-items: center; /* Centrer horizontalement */
-      height: 100vh;
       font-family: 'Roboto', sans-serif;
       margin: 0;
       text-align: center;
       background-color: #131313; /* Fond gris foncé */
+      min-height: 100vh;
     }
 
     h1 {
       color: white; /* Titre en blanc */
+      margin-top: 40px; /* Espacement en haut */
       margin-bottom: 20px;
     }
 
@@ -93,23 +93,56 @@
     a:hover {
       color: lightgray;
     }
+
+    details {
+      margin: 20px;
+    }
+
+    summary {
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    footer {
+      background-color: #333;
+      color: white;
+      padding: 10px; /* Réduire le padding */
+      font-size: 0.8rem; /* Réduire la taille de la police */
+      text-align: center;
+      position: fixed; /* Footer fixé en bas de page */
+      bottom: 0;
+      width: 100%;
+    }
+
+    footer a {
+      color: #00bfff;
+      text-decoration: none;
+    }
   </style>
 </head>
 <body>
 
   <h1>Bienvenue sur la page des graphiques des musées</h1>
 
+  <section>
+    <details>
+      <summary style="font-size: 20px; color: white;">Connaitre le contexte</summary>
+      <p style="color: white; text-align: center; max-width: 1000px; margin: 20px auto;">
+        Ce projet est réalisé dans le cadre d'une SAE au sein de l'IUT de Montbéliard, dans la formation BUT MMI.<br> Il s'inscrit dans un défi proposé par <strong>l'Open Data University</strong>, visant à analyser et valoriser l'offre culturelle en France. <br> En croisant des données ouvertes, l'objectif est d'explorer la répartition des équipements culturels à travers des visualisations interactives, afin de mettre en lumière les disparités et proposer des solutions pour favoriser un meilleur accès à la culture.
+      </p>
+    </details>
+  </section>
+
   <!-- Bloc des options -->
   <div class="options">
     <div class="option active" style="--optionBackground:url('./lukas-blazek-mcSDtbWXUZU-unsplash.jpg');" data-link="graphique1.html">
-
       <div class="label">
         <div class="info">
           <a href="graphique1.html">Graphique des Thématiques</a>
         </div>
       </div>
     </div>
-        <div class="option" style="--optionBackground:url('./stale-grut-f5MWSw11jjo-unsplash.jpg');" data-link="carte1.html">
+    <div class="option" style="--optionBackground:url('./stale-grut-f5MWSw11jjo-unsplash.jpg');" data-link="carte1.html">
       <div class="label">
         <div class="info">
           <a href="carte1.html">Carte des Musées</a>
@@ -131,6 +164,13 @@
       </div>
     </div>
   </div>
+
+  <!-- Footer -->
+  <footer>
+    <p>© 2024 SAE 303 Offre culturelle en France - Tous droits réservés</p>
+    <p> Les Étudiants à l'initiative du projet <a href="https://www.linkedin.com/in/blandine-nahorny/">Blandine NAHORNY</a> | <a href="https://www.linkedin.com/in/matys-ouvrard-ba9832293/">Matys OUVRARD</a> | <a href="https://www.linkedin.com/in/viktor-ghirardelli/">Viktor GHIRARDELLI</a></p>
+  </footer>
+
   <!-- Ajouter le script jQuery -->
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
