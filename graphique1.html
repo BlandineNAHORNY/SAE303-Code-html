@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Graphique sur les thématiques des musées par département</title>
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #131313; /* Fond gris foncé */
+      color: white; /* Texte en blanc */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    h2 {
+      text-align: center;
+      color: white;
+      margin-bottom: 20px;
+    }
+
+    .btn-back {
+      display: inline-block;
+      padding: 10px 20px;
+      margin-bottom: 20px;
+      background-color: #5D9CEC;
+      color: white;
+      text-decoration: none;
+      border-radius: 5px;
+      transition: background-color 0.3s ease;
+    }
+
+    .btn-back:hover {
+      background-color: #4A7BC1;
+    }
+
+    #chartContainer {
+      width: 90%;
+      max-width: 1000px;
+      height: 650px;
+      margin: 20px auto;
+      background-color: #1C1C1C; /* Fond gris foncé pour le conteneur du graphique */
+      border-radius: 10px;
+      padding: 20px;
+    }
+
+    #departementSelect {
+      display: block;
+      margin: 20px auto;
+      font-size: 1em;
+      padding: 10px;
+      background-color: #333; /* Fond gris pour le sélecteur */
+      color: white; /* Texte blanc pour le sélecteur */
+      border: none;
+      border-radius: 5px;
+      transition: background-color 0.3s ease;
+    }
+
+    #departementSelect:hover {
+      background-color: #444;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Graphique des Thématiques par Musée et par Département</h2>
+
+  <!-- Bouton retour à l'accueil -->
+  <a href="index.html" class="btn-back">Retour à l'accueil</a>
+
+  <!-- Menu déroulant pour sélectionner le département -->
+  <select id="departementSelect">
+    <option value="Tous">Tous les Départements</option>
+  </select>
+
+  <!-- Conteneur pour le graphique -->
+  <div id="chartContainer"></div>
+
+  <!-- Import Plot.js et d3.js -->
+  <script type="module">
+    import * as Plot from "https://cdn.jsdelivr.net/npm/@observablehq/plot@0.6/+esm";
+    import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
+
+    let musees = [];
+    let departements = new Set(); // Pour stocker les départements
+
+    // Fonction pour créer le graphique
+    function renderChart(filteredData) {
+      // Group by theme and count occurrences
+      const themeCounts = d3.rollups(
+        filteredData,
+        v => v.length,
+        d => d.theme
+      ).map(([theme, count]) => ({ theme, count }))
+        .sort((a, b) => b.count - a.count); // Sort by count
+
+      const topThemes = themeCounts.slice(0, 15); // Montrer uniquement les 15 thématiques principales
+
+      // Supprimer le graphique précédent, s'il existe
+      document.getElementById('chartContainer').innerHTML = '';
+
+      // Calculer la valeur maximale pour ajuster l'échelle Y dynamiquement
+      const maxCount = d3.max(topThemes, d => d.count);
+
+      // Render the chart
+      const chart = Plot.plot({
+        title: "Top 15 des Thématiques des Musées",
+        width: 800,
+        height: 500,
+        marginBottom: 100,
+        marginTop: 50,
+        x: {
+          label: "Thématiques",
+          domain: topThemes.map(d => d.theme),
+          tickRotate: -30
+        },
+        y: {
+          label: "Nombre de musées",
+          grid: true,
+          domain: [0, maxCount],  // Ajustement dynamique en fonction des données
+          ticks: 5, // Contrôle du nombre de ticks
+          tickFormat: d3.format("d") // Afficher seulement les nombres entiers
+        },
+        marks: [
+          Plot.barY(topThemes, {
+            x: "theme",
+            y: "count",
+            fill: "theme",
+            title: d => `${d.theme}: ${d.count} musées`,
+            stroke: "black",
+            strokeWidth: 0.5
+          })
+        ],
+        color: {
+          legend: true,
+          label: "Thématiques"
+        }
+      });
+
+      document.getElementById('chartContainer').appendChild(chart);
+    }
+
+    // Charger les données JSON
+    fetch('musee-thematique.json')
+      .then(response => response.json())
+      .then(data => {
+        musees = data.map(museum => ({
+          theme: museum.Domaine_thematique,
+          name: museum.Nom_officiel,
+          departement: museum.Departement,
+          ville: museum.Ville // Inclure la ville
+        }));
+
+        // Récupérer les départements uniques
+        musees.forEach(museum => departements.add(museum.departement));
+
+        // Ajouter les options de département au menu déroulant
+        const departementSelect = document.getElementById("departementSelect");
+        departements.forEach(departement => {
+          const option = document.createElement("option");
+          option.value = departement;
+          option.textContent = departement;
+          departementSelect.appendChild(option);
+        });
+
+        // Afficher le graphique pour tous les départements par défaut
+        renderChart(musees);
+
+        // Ajouter un événement pour changer le département sélectionné
+        departementSelect.addEventListener('change', () => {
+          const selectedDepartement = departementSelect.value;
+
+          // Filtrer les données par département
+          const filteredData = selectedDepartement === "Tous"
+            ? musees
+            : musees.filter(museum => museum.departement === selectedDepartement);
+
+          // Afficher le graphique pour le département sélectionné
+          renderChart(filteredData);
+        });
+      })
+      .catch(error => console.error('Erreur lors du chargement des données :', error));
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Graphiques des Musées</title>
+
+  <!-- Styles CSS -->
+  <style>
+    body {
+      display: flex;
+      flex-direction: column; /* Organiser les éléments en colonne */
+      justify-content: center; /* Centrer verticalement */
+      align-items: center; /* Centrer horizontalement */
+      height: 100vh;
+      font-family: 'Roboto', sans-serif;
+      margin: 0;
+      text-align: center;
+      background-color: #131313; /* Fond gris foncé */
+    }
+
+    h1 {
+      color: white; /* Titre en blanc */
+      margin-bottom: 20px;
+    }
+
+    .credit {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      color: inherit;
+    }
+
+    .options {
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      max-width: 1000px;
+    }
+
+    .option {
+      position: relative;
+      overflow: hidden;
+      width: 180px;
+      height: 250px;
+      margin: 10px;
+      background: var(--optionBackground, var(--defaultBackground, #E6E9ED));
+      background-size: cover;
+      background-position: center;
+      cursor: pointer;
+      transition: .5s cubic-bezier(0.05, 0.61, 0.41, 0.95);
+      border-radius: 20px;
+      box-shadow: 0 4px 8px rgba(255, 255, 255, 0.1); /* Légère ombre blanche */
+    }
+
+    .option:hover {
+      box-shadow: 0 6px 12px rgba(255, 255, 255, 0.2); /* Ombre blanche plus intense au survol */
+    }
+
+    .option.active {
+      flex-grow: 1;
+      transform: scale(1.05);
+    }
+
+    .option .label {
+      display: flex;
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      height: 40px;
+      transition: .5s cubic-bezier(0.05, 0.61, 0.41, 0.95);
+      color: white;
+    }
+
+    .option .label .info {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      margin-left: 10px;
+      color: white;
+    }
+
+    .option .label .info a {
+      font-weight: bold;
+      font-size: 1.2rem;
+      text-decoration: none;
+      color: white;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.6); /* Ajouter une ombre sous les liens */
+    }
+
+    a:hover {
+      color: lightgray;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Bienvenue sur la page des graphiques des musées</h1>
+
+  <!-- Bloc des options -->
+  <div class="options">
+    <div class="option active" style="--optionBackground:url('./lukas-blazek-mcSDtbWXUZU-unsplash.jpg');" data-link="graphique1.html">
+
+      <div class="label">
+        <div class="info">
+          <a href="graphique1.html">Graphique des Thématiques</a>
+        </div>
+      </div>
+    </div>
+        <div class="option" style="--optionBackground:url('./stale-grut-f5MWSw11jjo-unsplash.jpg');" data-link="carte1.html">
+      <div class="label">
+        <div class="info">
+          <a href="carte1.html">Carte des Musées</a>
+        </div>
+      </div>
+    </div>
+    <div class="option" style="--optionBackground:url('./giorgio-trovato-WyxqQpyFNk8-unsplash.jpg');" data-link="carte2.html">
+      <div class="label">
+        <div class="info">
+          <a href="carte2.html">Répartition des musées en France</a>
+        </div>
+      </div>
+    </div>
+    <div class="option" style="--optionBackground:url('./nik-shuliahin-rkFIIE9PxH0-unsplash.jpg');" data-link="graphique2.html">
+      <div class="label">
+        <div class="info">
+          <a href="graphique2.html">Répartition Entrées Payantes et Gratuites des Musées</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Ajouter le script jQuery -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+  <!-- Script pour gérer les options actives et rendre les cards cliquables -->
+  <script>
+    $(".option").click(function() {
+      const isActive = $(this).hasClass("active");
+      if (!isActive) {
+        // Réinitialiser les autres cards
+        $(".option").removeClass("active");
+
+        // Ajouter l'état actif à la card cliquée
+        $(this).addClass("active");
+      } else {
+        // Si la card est déjà active, redirection
+        const link = $(this).data("link");
+        window.location.href = link;
+      }
+    });
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Répartition des musées en France</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #131313; /* Fond gris foncé */
+      color: white; /* Texte en blanc */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    h2 {
+      text-align: center;
+      margin: 20px 0;
+      color: white;
+    }
+
+    #map {
+      height: 700px;
+      width: 100%;
+      margin-bottom: 20px;
+    }
+
+    .legend {
+      text-align: center;
+      padding: 10px;
+    }
+
+    .buttons {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    button {
+      font-size: 1em;
+      padding: 10px 20px;
+      margin: 5px;
+      cursor: pointer;
+      background-color: #5D9CEC;
+      border: none;
+      color: white;
+      border-radius: 5px;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #4A7BC1;
+    }
+
+    .btn-back {
+      display: inline-block;
+      padding: 10px 20px;
+      margin-bottom: 20px;
+      background-color: #5D9CEC;
+      color: white;
+      text-decoration: none;
+      border-radius: 5px;
+      transition: background-color 0.3s ease;
+    }
+
+    .btn-back:hover {
+      background-color: #4A7BC1;
+    }
+  </style>
+</head>
+<body>
+
+<h2>Répartition des musées en France</h2>
+
+<!-- Bouton retour à l'accueil -->
+<a href="index.html" class="btn-back">Retour à l'accueil</a>
+
+<div class="buttons">
+  <button id="btnTotalMusees">Afficher par nombre de musées</button>
+  <button id="btnDensiteMusees">Afficher par densité de musées (par 100 000 habitants)</button>
+</div>
+
+<div id="map"></div>
+
+<!-- Leaflet.js pour afficher la carte -->
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<script src="https://d3js.org/d3.v6.min.js"></script>
+
+<script>
+  const map = L.map('map').setView([46.603354, 1.888334], 6); // Centre de la France
+
+  // Ajout d'une couche de tuiles OpenStreetMap
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '© OpenStreetMap'
+  }).addTo(map);
+
+  let currentMode = 'total'; // Par défaut, afficher par nombre de musées
+
+  // Charger les données des départements (GeoJSON)
+  let departementData;
+  fetch('departements.geojson') // Assurez-vous que ce fichier est accessible
+    .then(response => response.json())
+    .then(geojson => {
+      departementData = geojson;
+      renderMap();
+    });
+
+  // Charger les données des musées (JSON)
+  let museeData;
+  fetch('liste-musees-2022.json') // Assurez-vous que ce fichier est accessible
+    .then(response => response.json())
+    .then(data => {
+      museeData = data;
+      renderMap();
+    });
+
+  // Charger les données de population
+  const population_by_department = {
+      // Charger les données de population
+    "Seine-Maritime": 12669287,
+  "Eure-et-Loir": 4347918,
+  "Maine-et-Loire": 8209092,
+  "Guyane": 2650411,
+  "Drôme": 5149178,
+  "Calvados": 7042996,
+  "La Réunion": 8558167,
+  "Paris": 21901041,
+  "Bouches-du-Rhône": 20514805,
+  "Loiret": 6822399,
+  "Lot": 1784019,
+  "Nord": 26172611,
+  "Tarn-et-Garonne": 2601583,
+  "Doubs": 5458704,
+  "Guadeloupe": 3947378,
+  "Yvelines": 14454378,
+  "Loir-et-Cher": 3345421,
+  "Dordogne": 4227847,
+  "Loire": 7716571,
+  "Tarn": 3946504,
+  "Vosges": 3721381,
+  "Alpes-de-Haute-Provence": 1667628,
+  "Pyrénées-Orientales": 4841834,
+  "Finistère": 9269687,
+  "Orne": 2864781,
+  "Creuse": 1207176,
+  "Ardennes": 2764047,
+  "Ain": 6468894,
+  "Lot-et-Garonne": 3372463,
+  "Savoie": 4386026,
+  "Côte-d'Or": 5394533,
+  "Rhône": 18560945,
+  "Cher": 3085908,
+  "Haute-Marne": 1778826,
+  "Aude": 3765468,
+  "Eure": 6012840,
+  "Charente-Maritime": 6622594,
+  "Manche": 5045612,
+  "Landes": 4178733,
+  "Seine-et-Marne": 14074735,
+  "Haute-Vienne": 3795252,
+  "Seine-Saint-Denis": 16185815,
+  "Val-de-Marne": 13922336,
+  "Val-d'Oise": 12299692,
+  "Côtes-d'Armor": 6113528,
+  "Hauts-de-Seine": 16202156,
+  "Marne": 5720068,
+  "Charente": 3572682,
+  "Aveyron": 2841467,
+  "Isère": 12712614,
+  "Vienne": 4417775,
+  "Allier": 3441277,
+  "Aisne": 5370891,
+  "Haute-Corse": 1815868,
+  "Haute-Savoie": 8147387,
+  "Territoire de Belfort": 1426059,
+  "Bas-Rhin": 11439594,
+  "Nièvre": 2120427,
+  "Cantal": 1483183,
+  "Gers": 1948882,
+  "Meurthe-et-Moselle": 7401986,
+  "Haute-Saône": 2389925,
+  "Deux-Sèvres": 3782390,
+  "Morbihan": 7659757,
+  "Hautes-Alpes": 1423456,
+  "Essonne": 12883707,
+  "Saône-et-Loire": 5606737,
+  "Mayenne": 3097407,
+  "Lozère": 779015,
+  "Pas-de-Calais": 14740538,
+  "Ardèche": 3315870,
+  "Gironde": 16078620,
+  "Indre-et-Loire": 6139322,
+  "Oise": 8256501,
+  "Corrèze": 2455591,
+  "Loire-Atlantique": 14141245,
+  "Vendée": 6898240,
+  "Somme": 5741169,
+  "Yonne": 3412907,
+  "Ille-et-Vilaine": 10727925,
+  "Meuse": 1885095,
+  "Puy-de-Dôme": 6614694,
+  "Martinique": 3760441,
+  "Alpes-Maritimes": 11108679,
+  "Haute-Loire": 2298730,
+  "Indre": 2256545,
+  "Hautes-Pyrénées": 2345511,
+  "Vaucluse": 5651260,
+  "Moselle": 10576223,
+  "Gard": 7533206,
+  "Aube": 3124677,
+  "Hérault": 11685112,
+  "Haut-Rhin": 7696041,
+  "Corse-du-Sud": 1591525,
+  "Ariège": 1562855,
+  "Jura": 2630586,
+  "Haute-Garonne": 13854537,
+  "Sarthe": 5724324,
+  "Pyrénées-Atlantiques": 6910068,
+  "Var": 10867680
+  };
+
+  function renderMap() {
+    if (!departementData || !museeData) return; // Attendre que les deux jeux de données soient chargés
+
+    // Comptage des musées par département
+    const museums_count_by_department = museeData.reduce((acc, museum) => {
+      const dept = museum["Département"];
+      if (dept) {
+        acc[dept] = (acc[dept] || 0) + 1;
+      }
+      return acc;
+    }, {});
+
+    // Création de l'objet combiné avec la densité de musées par département
+    const combined_data = Object.keys(museums_count_by_department).map(dept => {
+      const population = population_by_department[dept] || 0;
+      const museums_count = museums_count_by_department[dept] || 0;
+
+      return {
+        département: dept,
+        population: population,
+        musées: museums_count,
+        museums_per_100000_inhabitants: population > 0 ? (museums_count / population) * 100000 : 0
+      };
+    });
+
+    // Définir l'échelle de couleur pour le nombre total de musées
+    const maxMusees = Math.max(...combined_data.map(d => d.musées));
+    const colorScaleMusees = d3.scaleQuantize()
+      .domain([0, maxMusees])
+      .range(["#f2f0f7", "#dadaeb", "#bcbddc", "#9e9ac8", "#807dba", "#6a51a3", "#54278f", "#3f007d"]);
+
+    // Définir l'échelle de couleur pour la densité de musées
+    const maxDensity = Math.max(...combined_data.map(d => d.museums_per_100000_inhabitants));
+    const colorScaleDensity = d3.scaleQuantize()
+      .domain([0, maxDensity])
+      .range(["#f2f0f7", "#dadaeb", "#bcbddc", "#9e9ac8", "#807dba", "#6a51a3", "#54278f", "#3f007d"]);
+
+    // Ajouter les départements sur la carte avec des couleurs
+    function updateMap(mode) {
+      L.geoJSON(departementData, {
+        style: function (feature) {
+          const dept = feature.properties.nom;
+          const data = combined_data.find(row => row.département === dept);
+          const value = mode === 'total' ? (data ? data.musées : 0) : (data ? data.museums_per_100000_inhabitants : 0);
+          const color = mode === 'total' ? colorScaleMusees(value) : colorScaleDensity(value);
+          return {
+            fillColor: color,
+            weight: 1,
+            color: '#666666',
+            fillOpacity: 1
+          };
+        },
+        onEachFeature: function (feature, layer) {
+          const dept = feature.properties.nom;
+          const data = combined_data.find(row => row.département === dept);
+          const population = data ? data.population.toLocaleString('fr-FR') : 'Données non disponibles';
+          const count = data ? data.musées : 0;
+          const density = data ? data.museums_per_100000_inhabitants.toFixed(2) : 'Données non disponibles';
+
+          // Utiliser bindTooltip pour afficher les infos au survol (hover)
+          layer.bindTooltip(`
+            <strong>${dept}</strong><br>
+            Population: ${population}<br>
+            Musées: ${count}<br>
+            Musées pour 100 000 habitants: ${density}
+          `, {
+            sticky: true, // Garder la bulle collée au curseur lors du survol
+          });
+        }
+      }).addTo(map);
+    }
+
+    // Premier rendu basé sur le mode par défaut (nombre total de musées)
+    updateMap(currentMode);
+
+    // Ajouter des événements pour basculer entre les modes
+    document.getElementById('btnTotalMusees').addEventListener('click', () => {
+      currentMode = 'total';
+      map.eachLayer(layer => {
+        if (layer instanceof L.GeoJSON) {
+          map.removeLayer(layer);
+        }
+      });
+      updateMap(currentMode);
+    });
+
+    document.getElementById('btnDensiteMusees').addEventListener('click', () => {
+      currentMode = 'densite';
+      map.eachLayer(layer => {
+        if (layer instanceof L.GeoJSON) {
+          map.removeLayer(layer);
+        }
+      });
+      updateMap(currentMode);
+    });
+  }
+</script>
+
+</body>
+</html>
