@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,7 +11,7 @@
       margin: 0;
       padding: 0;
       background-color: #131313;
-      color: white;
+      color: rgb(255, 255, 255);
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -43,7 +44,7 @@
       width: 90%;
       max-width: 1000px;
       height: 650px;
-      margin: 20px auto;
+      margin: 80px auto;
       background-color: #1C1C1C;
       border-radius: 10px;
       padding: 20px;
@@ -64,13 +65,32 @@
     #departementSelect:hover {
       background-color: #444;
     }
+
+    button {
+      font-size: 1em;
+      padding: 10px;
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-bottom: 20px;
+    }
+
   </style>
 </head>
+
 <body>
 
   <h2>Graphique des Thématiques par Musée et par Département</h2>
 
-  <a href="index.html" class="btn-back">Retour à l'accueil</a>
+  <button onclick="window.location.href='index.html';">Retour à l'accueil</button>
+
+  <section id="carte-musees">
+    <h1>Carte des Musées en France</h1>
+    <p>Ce graphique interactif vous présente les 15 principales thématiques des musées en France, classées par nombre d’établissements. Découvrez les thématiques dominantes et leur répartition à travers les départements français.</p>
+    <p>Utilisez le sélecteur ci-dessous pour filtrer par département et explorer les spécificités culturelles locales.</p>
+  </section>
 
   <select id="departementSelect">
     <option value="Tous">Tous les Départements</option>
@@ -98,13 +118,14 @@
       document.getElementById('chartContainer').innerHTML = '';
 
       const maxCount = d3.max(topThemes, d => d.count);
+      const tickInterval = maxCount > 10 ? 5 : 1;
 
       const chart = Plot.plot({
         title: "Top 15 des Thématiques des Musées",
         width: 800,
         height: 500,
-        marginBottom: 100,
-        marginTop: 50,
+        marginBottom: 150,
+        marginTop: 80,
         x: {
           label: "Thématiques",
           domain: topThemes.map(d => d.theme),
@@ -113,9 +134,10 @@
         y: {
           label: "Nombre de musées",
           grid: true,
-          domain: [0, maxCount],
-          ticks: 5,
-          tickFormat: d3.format("d")
+          domain: [0, Math.ceil(maxCount / tickInterval) * tickInterval],
+          ticks: Math.ceil(maxCount / tickInterval),
+          tickFormat: d3.format("d"),
+          tickValues: d3.range(0, Math.ceil(maxCount / tickInterval) * tickInterval + 1, tickInterval)
         },
         marks: [
           Plot.barY(topThemes, {
@@ -129,7 +151,12 @@
         ],
         color: {
           legend: true,
-          label: "Thématiques"
+          label: "Thématiques",
+          range: [
+            "#ffbb78", "#1f77b4", "#ff7f0e", "#2ca02c", "#d62728",
+            "#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22",
+            "#17becf", "#ff9896", "#98df8a", "#c5b0d5", "#c49c94"
+          ]
         }
       });
 
@@ -172,4 +199,5 @@
   </script>
 
 </body>
+
 </html>

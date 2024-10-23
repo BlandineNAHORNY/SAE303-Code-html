@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Répartition des musées en France</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/@observablehq/plot@0.6"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
   <style>
     body {
@@ -12,7 +14,7 @@
       margin: 0;
       padding: 0;
       background-color: #131313;
-      color: white;
+      color: rgb(116, 116, 116);
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -25,17 +27,6 @@
       color: white;
     }
 
-    #map {
-      height: 700px;
-      width: 100%;
-      margin-bottom: 20px;
-    }
-
-    .legend {
-      text-align: center;
-      padding: 10px;
-    }
-
     .buttons {
       text-align: center;
       margin-bottom: 20px;
@@ -43,18 +34,32 @@
 
     button {
       font-size: 1em;
-      padding: 10px 20px;
-      margin: 5px;
-      cursor: pointer;
-      background-color: #5D9CEC;
-      border: none;
+      padding: 10px;
+      background-color: #007BFF;
       color: white;
+      border: none;
       border-radius: 5px;
-      transition: background-color 0.3s ease;
+      cursor: pointer;
+      margin-bottom: 20px;
     }
 
     button:hover {
       background-color: #4A7BC1;
+    }
+
+    .legend-container svg {
+      display: block;
+      margin: 0 auto;
+    }
+
+    .tooltip {
+      position: absolute;
+      background-color: #ffffff;
+      color: #000;
+      padding: 10px;
+      border-radius: 5px;
+      box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.1);
+      pointer-events: none;
     }
 
     .btn-back {
@@ -72,149 +77,138 @@
       background-color: #4A7BC1;
     }
 
-    .legend-container {
-      width: 300px;
-      margin: 20px;
-    }
+    
 
-    .legend-container svg {
-      display: block;
-      margin: 0 auto;
-    }
   </style>
 </head>
-<body x-data="museumMap()" x-init="init()">
 
-<h2>Répartition des musées en France</h2>
+<body>
+  <h2>Répartition des musées en France</h2>
 
-<a href="index.html" class="btn-back">Retour à l'accueil</a>
 
-<div class="buttons">
-  <button @click="currentMode = 'total'; renderMap()">Afficher par nombre de musées</button>
-  <button @click="currentMode = 'densite'; renderMap()">Afficher par densité de musées (par 100 000 habitants)</button>
-</div>
+  <button onclick="window.location.href='index.html';">Retour à l'accueil</button>
 
-<div id="map" x-ref="mapDiv"></div>
+  <section class="text-c">
+    <h1>Carte des Musées en France</h1>
+    <p>Ce graphique interactif vous présente les 15 principales thématiques des musées en France, classées par nombre d’établissements. Découvrez les thématiques dominantes et leur répartition à travers les départements français.</p>
+    <p>Utilisez le sélecteur ci-dessous pour filtrer par département et explorer les spécificités culturelles locales.</p>
+  </section>
 
-<div class="legend-container">
-  <div x-ref="legend"></div>
-</div>
+  <div x-data="museumMap()" x-init="init()">
+    <div class="buttons">
+      <button @click="currentMode = 'total'; renderMap()">Afficher par nombre de musées</button>
+      <button @click="currentMode = 'densite'; renderMap()">Afficher par densité de musées (par 100 000 habitants)</button>
+    </div>
 
-<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-<script src="https://d3js.org/d3.v6.min.js"></script>
+    <div x-ref="plotDiv"></div>
 
-<script>
-  function museumMap() {
-    return {
-      currentMode: 'total',
-      departementData: null,
-      museeData: null,
-      populationData: null,
-      map: null,
+    <div class="legend-container">
+      <div x-ref="legend"></div>
+    </div>
 
-      async init() {
-        this.map = L.map(this.$refs.mapDiv).setView([46.603354, 1.888334], 6);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(this.map);
+    <div x-ref="tooltip" class="tooltip" style="display:none;"></div>
+  </div>
 
-        // Chargement des données
-        this.departementData = await (await fetch('departements.geojson')).json();
-        this.museeData = await (await fetch('liste-musees-2022.json')).json();
-        this.populationData = await (await fetch('population.json')).json();
+  <script>
+    function museumMap() {
+      return {
+        currentMode: 'total',
+        departementData: null,
+        museeData: null,
+        populationData: null,
 
-        this.renderMap();
-      },
+        async init() {
+          this.departementData = await (await fetch('departements.geojson')).json();
+          this.museeData = await (await fetch('liste-musees-2022.json')).json();
+          this.populationData = await (await fetch('population.json')).json();
+          this.renderMap();
+        },
 
-      renderMap() {
-        if (!this.departementData || !this.museeData || !this.populationData) return;
+        renderMap() {
+          if (!this.departementData || !this.museeData || !this.populationData) return;
 
-        const museums_count_by_department = this.museeData.reduce((acc, museum) => {
-          const dept = museum["Département"];
-          if (dept) acc[dept] = (acc[dept] || 0) + 1;
-          return acc;
-        }, {});
+          const museums_count_by_department = this.museeData.reduce((acc, museum) => {
+            const dept = museum["Département"];
+            if (dept) acc[dept] = (acc[dept] || 0) + 1;
+            return acc;
+          }, {});
 
-        const combined_data = Object.keys(museums_count_by_department).map(dept => {
-          const populationEntry = this.populationData.find(p => p.Géographie === dept && p['Âge'] === "Total");
-          const population = populationEntry ? populationEntry.Valeur : 0;
-          const museums_count = museums_count_by_department[dept] || 0;
+          const population_by_department = this.populationData.reduce((acc, row) => {
+            const dept = row["Géographie"];
+            const population_value = +row["Valeur"];
+            if (row["Sexe"] === "Total" && row["Âge"] === "Total" &&
+              row["Période"] === 2021) {
+              if (dept && population_value) {
+                acc[dept] = (acc[dept] || 0) + population_value;
+              }
+            }
+            return acc;
+          }, {});
 
-          return {
-            département: dept,
-            population: population,
-            musées: museums_count,
-            museums_per_100000_inhabitants: population > 0 ? (museums_count / population) * 100000 : 0
-          };
-        });
+          const combined_data = Object.keys(museums_count_by_department).map(dept => {
+            const population = population_by_department[dept] || 0;
+            const museums_count = museums_count_by_department[dept] || 0;
 
-        const maxMusees = Math.max(...combined_data.map(d => d.musées));
-        const colorScaleMusees = d3.scaleQuantize().domain([0, maxMusees]).range(d3.schemePurples[9]);
-        const maxDensity = Math.max(...combined_data.map(d => d.museums_per_100000_inhabitants));
-        const colorScaleDensity = d3.scaleQuantize().domain([0, maxDensity]).range(d3.schemePurples[9]);
+            return {
+              département: dept,
+              population: population,
+              musées: museums_count,
+              museums_per_100000_inhabitants: population > 0 ? (museums_count / population) * 100000 : 0
+            };
+          });
 
-        this.updateMap(combined_data, colorScaleMusees, colorScaleDensity);
-        this.createLegend(colorScaleDensity);
-      },
+          const plot = Plot.plot({
+            projection: {
+              type: "mercator",
+              domain: this.departementData
+            },
+            width: 1000,
+            height: 700,
+            title: `Répartition des musées en France - ${this.currentMode}`,
+            color: {
+              type: "quantize",
+              n: 8,
+              range: ["#f2f0f7", "#dadaeb", "#bcbddc", "#9e9ac8", "#807dba", "#6a51a3", "#54278f", "#3f007d"],
+              label: this.currentMode === "densite"
+                ? "Densité de musées (par 100 000 habitants)"
+                : "Nombre total de musées",
+              domain: this.currentMode === "densite"
+                ? [Math.min(...combined_data.map(d => d.museums_per_100000_inhabitants)), Math.max(...combined_data.map(d => d.museums_per_100000_inhabitants))]
+                : [Math.min(...combined_data.map(d => d.musées)), Math.max(...combined_data.map(d => d.musées))],
+              tickFormat: this.currentMode === "densite"
+                ? d3.format(".2f")
+                : d3.format("d"),
+              legend: true
+            },
+            marks: [
+              Plot.geo(this.departementData, {
+                fill: d => {
+                  const dept = d.properties.nom;
+                  const data = combined_data.find(row => row.département === dept);
+                  return data
+                    ? (this.currentMode === "densite" ? data.museums_per_100000_inhabitants : data.musées)
+                    : 0;
+                },
+                stroke: "#666666",
+                title: d => {
+                  const dept = d.properties.nom;
+                  const data = combined_data.find(row => row.département === dept);
+                  return data
+                    ? `${dept}\nPopulation: ${data.population.toLocaleString('fr-FR', { useGrouping: true })}\nMusées: ${data.musées.toLocaleString('fr-FR', { useGrouping: true })}\nMusées pour 100 000 habitants: ${data.museums_per_100000_inhabitants.toFixed(2)}`
+                    : `${dept}\nPas de données disponibles`;
+                },
+                tip: true
+              })
+            ]
+          });
 
-      updateMap(combined_data, colorScaleMusees, colorScaleDensity) {
-        L.geoJSON(this.departementData, {
-          style: feature => {
-            const dept = feature.properties.nom;
-            const data = combined_data.find(row => row.département === dept);
-            const value = this.currentMode === 'total' ? data?.musées : data?.museums_per_100000_inhabitants;
-            const color = this.currentMode === 'total' ? colorScaleMusees(value) : colorScaleDensity(value);
-            return { fillColor: color, weight: 1, color: '#666666', fillOpacity: 1 };
-          },
-          onEachFeature: (feature, layer) => {
-            const dept = feature.properties.nom;
-            const data = combined_data.find(row => row.département === dept);
-            const population = data ? data.population.toLocaleString('fr-FR') : 'Données non disponibles';
-            const count = data ? data.musées : 0;
-            const density = data ? data.museums_per_100000_inhabitants.toFixed(2) : 'Données non disponibles';
-
-            layer.bindTooltip(`
-              <strong>${dept}</strong><br>
-              Population: ${population}<br>
-              Musées: ${count}<br>
-              Musées pour 100 000 habitants: ${density}
-            `, {
-              sticky: true,
-            });
-          }
-        }).addTo(this.map);
-      },
-
-      createLegend(colorScale) {
-        const width = 300, height = 70;
-
-        d3.select(this.$refs.legend).selectAll("*").remove();
-
-        const svg = d3.select(this.$refs.legend)
-          .append("svg")
-          .attr("width", width)
-          .attr("height", height);
-
-        svg.append("text")
-          .attr("x", width / 2)
-          .attr("y", 20)
-          .attr("text-anchor", "middle")
-          .style("font-size", "12px")
-          .style("font-weight", "bold")
-          .text("Densité de musées (par 100 000 habitants)");
-
-        const legend = d3.legendColor()
-          .labelFormat(d3.format(".2f"))
-          .scale(colorScale)
-          .shapeWidth(30)
-          .orient("horizontal");
-
-        svg.append("g")
-          .attr("class", "legendQuant")
-          .attr("transform", "translate(10,30)")
-          .call(legend);
-      }
-    };
-  }
-</script>
+          d3.select(this.$refs.plotDiv).html('');
+          d3.select(this.$refs.plotDiv).append(() => plot);
+        }
+      };
+    }
+  </script>
 
 </body>
+
 </html>

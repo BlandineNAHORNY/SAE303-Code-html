@@ -23,6 +23,14 @@
       margin-bottom: 20px;
     }
 
+    h2 {
+      color: white;
+      margin-top: 20px;
+      margin-bottom: 50px;
+      font-size: 17px;
+      text-align: left;
+    }
+
     .credit {
       position: absolute;
       bottom: 20px;
@@ -102,6 +110,33 @@
       font-weight: bold;
     }
 
+button {
+  font-size: 1em;
+  padding: 12px 24px;
+  background-color: #81BDFF;
+  text-decoration: none;
+  color: black;
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  margin-top: 50px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  transition: background-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+button:hover {
+  background-color: #4A8ACD;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+  transform: translateY(-3px);
+}
+
+button:active {
+  background-color: #357ABD;
+  transform: translateY(0);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+
+
     footer {
       background-color: #333;
       color: white;
@@ -122,7 +157,8 @@
 <body>
 
   <h1>Bienvenue sur la page des graphiques des musées</h1>
-
+  <h2>Explorez les offres culturelles muséales en France à travers des graphiques interactifs, des cartes et des statistiques sur les musées.<br>
+  </br>Naviguez facilement entre les différentes sections pour découvrir les thématiques, la répartition géographique et les tendances d'accès aux musées.</h2>
   <section>
     <details>
       <summary style="font-size: 20px; color: white;">Connaitre le contexte</summary>
@@ -161,7 +197,18 @@
         </div>
       </div>
     </div>
+    <div class="option" style="--optionBackground:url('./Wordpress-img.jpg');" data-link="wordpress.html">
+      <div class="label">
+        <div class="info">
+          <a href="wordpress.html">Wordpress</a>
+        </div>
+      </div>
+    </div>
   </div>
+
+  <button>
+    <a href="https://observablehq.com/d/3825181005997768">Notebook Observablehq</a>
+  </button>
 
   <footer>
     <p>© 2024 SAE 303 Offre culturelle en France - Tous droits réservés</p>
@@ -178,6 +225,7 @@
 
         $(this).addClass("active");
       } else {
+
         const link = $(this).data("link");
         window.location.href = link;
       }

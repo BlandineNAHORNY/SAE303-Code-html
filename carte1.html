@@ -1,49 +1,59 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Carte Interactive des Musées</title>
+  <title>Carte Interactive des Musées en France</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
   <style>
     body {
       font-family: 'Roboto', sans-serif;
-      margin: 0;
-      padding: 0;
       background-color: #131313;
       color: white;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
+      padding: 20px;
     }
 
-    h2 {
-      text-align: center;
-      margin: 20px 0;
+    h1 {
+      margin-top: 20px;
       color: white;
     }
 
     #map {
       height: 650px;
       width: 100%;
+      max-width: 1200px;
       margin-bottom: 20px;
+      border-radius: 8px;
     }
 
     .legend {
+      background-color: #222;
+      padding: 10px;
+      border-radius: 8px;
+      color: white;
       text-align: center;
-      margin-bottom: 20px;
+      margin-top: 10px;
+      width: 100%;
+      max-width: 1200px;
     }
 
     .legend ul {
       list-style-type: none;
       padding-left: 0;
+      display: flex;
+      justify-content: center;
     }
 
     .legend li {
       display: flex;
       align-items: center;
-      color: white;
+      margin-right: 20px;
     }
 
     .legend span {
@@ -54,24 +64,21 @@
       margin-right: 8px;
     }
 
-    .btn-back {
-      display: inline-block;
-      padding: 10px 20px;
-      margin-bottom: 20px;
-      background-color: #5D9CEC;
-      color: white;
-      text-decoration: none;
-      border-radius: 5px;
-      transition: background-color 0.3s ease;
+    .legend .blue {
+      background-color: blue;
     }
 
-    .btn-back:hover {
-      background-color: #4A7BC1;
+    .legend .red {
+      background-color: red;
+    }
+
+    label {
+      color: white;
     }
 
     select {
       font-size: 1em;
-      padding: 10px;
+      padding: 8px;
       margin-bottom: 20px;
       background-color: #333;
       color: white;
@@ -79,158 +86,160 @@
       border-radius: 5px;
     }
 
-    select:focus {
-      outline: none;
-    }
-
-    #villeCheckboxContainer label {
-      display: block;
+    button {
+      font-size: 1em;
+      padding: 10px;
+      background-color: #007BFF;
       color: white;
-      margin-bottom: 3px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-bottom: 20px;
     }
 
-    input[type="checkbox"] {
-      margin-right: 10px;
+    button:hover {
+      background-color: #0056b3;
     }
 
-    label {
-      color: white;
+    #villeCheckboxContainer {
+      max-height: 200px;
+      overflow-y: auto;
+      padding: 10px;
+      background-color: #222;
+      border-radius: 8px;
+      margin-bottom: 20px;
     }
   </style>
 </head>
+
 <body>
+  <h1>Carte des musées en France</h1>
 
-  <h2>Carte des musées par ville & leur présence en ligne</h2>
+  <button onclick="window.location.href='index.html';">Retour à l'accueil</button>
 
-  <a href="index.html" class="btn-back">Retour à l'accueil</a>
+  <section id="carte-musees">
+    <h1>Carte des Musées en France</h1>
+    <p>Explorez la carte interactive pour découvrir les musées présents dans chaque région de France. Vous pouvez filtrer par département et ville pour cibler les musées que vous souhaitez visiter.</p>
+    <p>Les musées avec une présence en ligne sont indiqués en bleu, tandis que ceux sans site internet sont en rouge.</p>
+  </section>
+  <div x-data="museumMap()" x-init="init()" style="width: 80%">
+    <div>
+      <label for="departementSelect">Département :</label>
+      <select id="departementSelect" x-model="selectedDepartement" @change="updateMap()">
+        <option value="Tous">Tous</option>
+        <template x-for="departement in uniqueDepartements" :key="departement">
+          <option x-text="departement"></option>
+        </template>
+      </select>
+    </div>
 
-  <select id="departementSelect"></select>
+    <div>
+      <label for="villeSelectContainer">Villes :</label>
+      <select id="villeSelectContainer" x-model="selectedVille" @change="updateMap()" x-show="selectedDepartement === 'Tous'">
+        <option value="">Choisir une ville</option>
+        <template x-for="ville in filteredVilles" :key="ville">
+          <option x-text="ville"></option>
+        </template>
+      </select>
 
-  <div id="villeCheckboxContainer"></div>
+      <div x-show="selectedDepartement !== 'Tous'">
+        <div id="villeCheckboxContainer">
+          <template x-for="ville in filteredVilles" :key="ville">
+            <label>
+              <input type="checkbox" :value="ville" @change="toggleVille(ville)">
+              <span x-text="ville"></span>
+            </label><br>
+          </template>
+        </div>
+      </div>
+    </div>
 
-  <div id="map"></div>
+    <!-- Conteneur de la carte -->
+    <div id="map" x-ref="mapContainer"></div>
 
-  <div class="legend">
-    <strong>Légende des points :</strong>
-    <ul>
-      <li><span style="background-color: blue;"></span> Musée avec présence en ligne</li>
-      <li><span style="background-color: red;"></span> Musée sans présence en ligne</li>
-    </ul>
+    <!-- Légende sous la carte -->
+    <div class="legend">
+      <ul>
+        <li><span class="blue"></span>Musée avec présence en ligne</li>
+        <li><span class="red"></span>Musée sans présence en ligne</li>
+      </ul>
+    </div>
   </div>
 
-  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-
   <script>
-    const map = L.map('map').setView([46.6033, 1.8883], 6);
+    function museumMap() {
+      return {
+        departements: null,
+        musees: null,
+        selectedDepartement: 'Tous',
+        selectedVille: '',
+        uniqueDepartements: [],
+        filteredVilles: [],
 
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
-      attribution: "© <a href=https://www.openstreetmap.org/copyright>OpenStreetMap</a> contributors"
-    }).addTo(map);
-
-    async function chargerMusees() {
-      try {
-        const response = await fetch('musee-thematique.json');
-        const musees = await response.json();
-        return musees;
-      } catch (error) {
-        console.error("Erreur lors du chargement des données des musées : ", error);
-      }
-    }
-
-    async function initMap() {
-      const musees = await chargerMusees();
-      populateDepartmentDropdown(musees);
-      updateMap("Tous", [], musees);
-    }
-
-    function updateMap(selectedDepartement, selectedVilles, musees) {
-      map.eachLayer(layer => {
-        if (layer instanceof L.CircleMarker) {
-          map.removeLayer(layer);
-        }
-      });
-
-      musees
-        .filter(musee => 
-          (selectedDepartement === "Tous" || musee.Departement === selectedDepartement) &&
-          (selectedVilles.length === 0 || selectedVilles.includes(musee.Ville))
-        )
-        .forEach(museum => {
-          const coords = museum.Coordonnees.split(',');
-          const lat = parseFloat(coords[0]);
-          const lon = parseFloat(coords[1]);
-
-          if (!isNaN(lat) && !isNaN(lon)) {
-            const markerColor = museum.URL ? "blue" : "red";
-            const markerRadius = 4;
-            
-            const marker = L.circleMarker([lat, lon], {
-              color: markerColor,
-              radius: markerRadius,
-              fillColor: markerColor,
-              fillOpacity: 0.7
-            }).addTo(map);
-
-            const popupContent = museum.URL
-              ? `<strong>${museum.Nom_officiel}</strong><br/><a href="${museum.URL}" target="_blank">Visiter le site</a>`
-              : `<strong>${museum.Nom_officiel}</strong>`;
-            
-            marker.bindPopup(popupContent);
-          } else {
-            console.error("Coordonnées invalides pour le musée :", museum.Nom_officiel);
+        async init() {
+          try {
+            this.departements = await (await fetch('./departements.geojson')).json();
+            this.musees = await (await fetch('./musee-thematique.json')).json();
+            this.uniqueDepartements = ['Tous', ...new Set(this.musees.map(m => m.Departement))];
+            this.initMap();
+          } catch (error) {
+            console.error("Erreur lors du chargement des données : ", error);
           }
-        });
+        },
+
+        initMap() {
+          this.map = L.map(this.$refs.mapContainer).setView([46.6033, 1.8883], 6);
+          L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: "© OpenStreetMap contributors"
+          }).addTo(this.map);
+          this.updateMap();
+        },
+
+        updateMap() {
+          this.map.eachLayer(layer => {
+            if (layer instanceof L.CircleMarker) {
+              this.map.removeLayer(layer);
+            }
+          });
+
+          const filteredMusees = this.musees.filter(m =>
+            (this.selectedDepartement === 'Tous' || m.Departement === this.selectedDepartement) &&
+            (this.selectedVille === '' || this.selectedVille === m.Ville)
+          );
+
+          filteredMusees.forEach(museum => {
+            const [lat, lon] = museum.Coordonnees.split(',').map(parseFloat);
+            if (!isNaN(lat) && !isNaN(lon)) {
+              const markerColor = museum.URL ? "blue" : "red";
+              const marker = L.circleMarker([lat, lon], {
+                color: markerColor,
+                radius: 3,
+                fillColor: markerColor,
+                fillOpacity: 0.7
+              }).addTo(this.map);
+
+              const url = museum.URL && !museum.URL.startsWith('http') ? `https://${museum.URL}` : museum.URL;
+              const popupContent = museum.URL
+                ? `<strong>${museum.Nom_officiel}</strong><br/><a href="${url}" target="_blank">Visiter le site</a>`
+                : `<strong>${museum.Nom_officiel}</strong>`;
+
+              marker.bindPopup(popupContent);
+            }
+          });
+
+          this.filteredVilles = [...new Set(
+            this.musees.filter(m => this.selectedDepartement === 'Tous' || m.Departement === this.selectedDepartement)
+              .map(m => m.Ville)
+          )];
+        },
+
+        toggleVille(ville) {
+          this.selectedVille = (this.selectedVille === ville) ? '' : ville;
+          this.updateMap();
+        }
+      };
     }
-
-    function populateDepartmentDropdown(musees) {
-      const uniqueDepartements = ["Tous", ...new Set(musees.map(museum => museum.Departement))];
-      const departementSelect = document.getElementById("departementSelect");
-      uniqueDepartements.forEach(departement => {
-        const option = document.createElement("option");
-        option.value = departement;
-        option.textContent = departement;
-        departementSelect.appendChild(option);
-      });
-
-      departementSelect.addEventListener('change', () => {
-        const selectedDepartement = departementSelect.value;
-        createVilleCheckboxes(selectedDepartement, musees);
-        updateMap(selectedDepartement, [], musees);
-      });
-    }
-
-    function createVilleCheckboxes(selectedDepartement, musees) {
-      const villeCheckboxContainer = document.getElementById("villeCheckboxContainer");
-      villeCheckboxContainer.innerHTML = "";
-
-      const museesDansDepartement = musees.filter(museum => museum.Departement === selectedDepartement);
-      const museesParVille = museesDansDepartement.reduce((acc, museum) => {
-        acc[museum.Ville] = (acc[museum.Ville] || 0) + 1;
-        return acc;
-      }, {});
-
-      Object.keys(museesParVille).forEach(ville => {
-        const label = document.createElement("label");
-        const checkbox = document.createElement("input");
-        checkbox.type = "checkbox";
-        checkbox.value = ville;
-
-        label.appendChild(checkbox);
-        label.appendChild(document.createTextNode(` ${ville} (${museesParVille[ville]} musée${museesParVille[ville] > 1 ? 's' : ''})`));
-        
-        villeCheckboxContainer.appendChild(label);
-        villeCheckboxContainer.appendChild(document.createElement("br"));
-
-        checkbox.addEventListener('change', () => {
-          const selectedVilles = Array.from(villeCheckboxContainer.querySelectorAll('input:checked')).map(cb => cb.value);
-          updateMap(departementSelect.value, selectedVilles, musees);
-        });
-      });
-    }
-
-    initMap();
-
   </script>
-
 </body>
+
 </html>

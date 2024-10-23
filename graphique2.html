@@ -62,11 +62,28 @@
     select:hover {
       background-color: #444;
     }
+
+    button {
+      font-size: 1em;
+      padding: 10px;
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-bottom: 20px;
+    }
+
   </style>
 </head>
 <body>
   <h2>Répartition des Entrées Payantes et Gratuites des Musées</h2>
-  <a href="index.html" class="btn-back">Retour à l'accueil</a>
+  <button onclick="window.location.href='index.html';">Retour à l'accueil</button>
+  <section id="carte-musees">
+    <h1>Répartition des Entrées Payantes et Gratuites des Musées</h1>
+    <p>Découvrez les tendances d’accès aux musées en France, avec une répartition des entrées payantes et gratuites. Sélectionnez une région et une catégorie de musée pour explorer les données.</p>
+    </section>
+
   <div class="inputs">
     <select id="selectedDepartment">
       <option value="Toute la France">Toute la France</option>
