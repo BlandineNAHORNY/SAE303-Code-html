@@ -10,8 +10,8 @@
       font-family: 'Roboto', sans-serif;
       margin: 0;
       padding: 0;
-      background-color: #131313; /* Fond gris foncé */
-      color: white; /* Texte en blanc */
+      background-color: #131313;
+      color: white;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -93,7 +93,6 @@
       margin-right: 10px;
     }
 
-    /* Style des boutons et checkboxes */
     label {
       color: white;
     }
@@ -104,19 +103,14 @@
 
   <h2>Carte des musées par ville & leur présence en ligne</h2>
 
-   <!-- Bouton retour à l'accueil -->
    <a href="index.html" class="btn-back">Retour à l'accueil</a>
 
-  <!-- Dropdown for department selection -->
   <select id="departementSelect"></select>
 
-  <!-- Checkboxes for city selection -->
   <div id="villeCheckboxContainer"></div>
 
-  <!-- Leaflet map container -->
   <div id="map"></div>
 
-  <!-- Legend for the markers -->
   <div class="legend">
     <strong>Légende des points :</strong>
     <ul>
@@ -125,17 +119,14 @@
     </ul>
   </div>
 
-  <!-- Leaflet.js Library -->
   <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
 
   <script>
-    // Load the museum data from the JSON file
-    const musees = []; // You'll replace this with the actual JSON data
+    const musees = [];
 
-    fetch('musee-thematique.json') // Replace with the path to the JSON file
+    fetch('musee-thematique.json')
       .then(response => response.json())
       .then(data => {
-        // Parse the JSON data and push it into the 'musees' array
         data.forEach(museum => {
           const coords = museum.Coordonnees.split(', ');
           musees.push({
@@ -148,30 +139,25 @@
           });
         });
 
-        // Initialize the map and the department dropdown once the data is loaded
         initMap();
         populateDepartmentDropdown();
         updateMap("Tous", []);
       });
 
-    // Initialize the map
     const map = L.map('map').setView([46.6033, 1.8883], 6);
 
-    // Add OpenStreetMap layer
     L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
       attribution: "© <a href=https://www.openstreetmap.org/copyright>OpenStreetMap</a> contributors"
     }).addTo(map);
 
-    // Function to update map based on selected department and cities
+
     function updateMap(selectedDepartement, selectedVilles) {
-      // Remove existing markers
       map.eachLayer(layer => {
         if (layer instanceof L.CircleMarker) {
           map.removeLayer(layer);
         }
       });
 
-      // Filter and add museum markers to the map
       musees
         .filter(musee => 
           (selectedDepartement === "Tous" || musee.departement === selectedDepartement) &&
@@ -196,7 +182,6 @@
         });
     }
 
-    // Populate department dropdown
     function populateDepartmentDropdown() {
       const uniqueDepartements = ["Tous", ...new Set(musees.map(museum => museum.departement))];
       const departementSelect = document.getElementById("departementSelect");
@@ -207,7 +192,6 @@
         departementSelect.appendChild(option);
       });
 
-      // Update city checkboxes and map when department changes
       departementSelect.addEventListener('change', () => {
         const selectedDepartement = departementSelect.value;
         createVilleCheckboxes(selectedDepartement);
@@ -215,33 +199,28 @@
       });
     }
 
-    // Function to create city checkboxes based on department and display the number of museums per city
     function createVilleCheckboxes(selectedDepartement) {
       const villeCheckboxContainer = document.getElementById("villeCheckboxContainer");
-      villeCheckboxContainer.innerHTML = "";  // Clear existing checkboxes
+      villeCheckboxContainer.innerHTML = "";
 
-      // Récupérer les villes et compter le nombre de musées par ville dans le département sélectionné
       const museesDansDepartement = musees.filter(museum => museum.departement === selectedDepartement);
       const museesParVille = museesDansDepartement.reduce((acc, museum) => {
         acc[museum.ville] = (acc[museum.ville] || 0) + 1;
         return acc;
       }, {});
 
-      // Créer des cases à cocher pour chaque ville
       Object.keys(museesParVille).forEach(ville => {
         const label = document.createElement("label");
         const checkbox = document.createElement("input");
         checkbox.type = "checkbox";
         checkbox.value = ville;
         
-        // Ajouter le nom de la ville et le nombre de musées
         label.appendChild(checkbox);
         label.appendChild(document.createTextNode(` ${ville} (${museesParVille[ville]} musée${museesParVille[ville] > 1 ? 's' : ''})`));
         
         villeCheckboxContainer.appendChild(label);
         villeCheckboxContainer.appendChild(document.createElement("br"));
 
-        // Update map when checkbox changes
         checkbox.addEventListener('change', () => {
           const selectedVilles = Array.from(villeCheckboxContainer.querySelectorAll('input:checked')).map(cb => cb.value);
           updateMap(departementSelect.value, selectedVilles);
@@ -249,7 +228,6 @@
       });
     }
 
-    // Initialize the map and department dropdown
     function initMap() {
       updateMap("Tous", []);
     }

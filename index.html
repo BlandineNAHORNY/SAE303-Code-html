@@ -5,22 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Graphiques des Musées</title>
 
-  <!-- Styles CSS -->
   <style>
     body {
       display: flex;
-      flex-direction: column; /* Organiser les éléments en colonne */
-      align-items: center; /* Centrer horizontalement */
+      flex-direction: column;
+      align-items: center;
       font-family: 'Roboto', sans-serif;
       margin: 0;
       text-align: center;
-      background-color: #131313; /* Fond gris foncé */
+      background-color: #131313;
       min-height: 100vh;
     }
 
     h1 {
-      color: white; /* Titre en blanc */
-      margin-top: 40px; /* Espacement en haut */
+      color: white;
+      margin-top: 40px;
       margin-bottom: 20px;
     }
 
@@ -52,11 +51,11 @@
       cursor: pointer;
       transition: .5s cubic-bezier(0.05, 0.61, 0.41, 0.95);
       border-radius: 20px;
-      box-shadow: 0 4px 8px rgba(255, 255, 255, 0.1); /* Légère ombre blanche */
+      box-shadow: 0 4px 8px rgba(255, 255, 255, 0.1);
     }
 
     .option:hover {
-      box-shadow: 0 6px 12px rgba(255, 255, 255, 0.2); /* Ombre blanche plus intense au survol */
+      box-shadow: 0 6px 12px rgba(255, 255, 255, 0.2);
     }
 
     .option.active {
@@ -87,7 +86,7 @@
       font-size: 1.2rem;
       text-decoration: none;
       color: white;
-      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.6); /* Ajouter une ombre sous les liens */
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.6);
     }
 
     a:hover {
@@ -106,10 +105,10 @@
     footer {
       background-color: #333;
       color: white;
-      padding: 10px; /* Réduire le padding */
-      font-size: 0.8rem; /* Réduire la taille de la police */
+      padding: 10px;
+      font-size: 0.8rem;
       text-align: center;
-      position: fixed; /* Footer fixé en bas de page */
+      position: fixed;
       bottom: 0;
       width: 100%;
     }
@@ -133,7 +132,6 @@
     </details>
   </section>
 
-  <!-- Bloc des options -->
   <div class="options">
     <div class="option active" style="--optionBackground:url('./lukas-blazek-mcSDtbWXUZU-unsplash.jpg');" data-link="graphique1.html">
       <div class="label">
@@ -165,27 +163,21 @@
     </div>
   </div>
 
-  <!-- Footer -->
   <footer>
     <p>© 2024 SAE 303 Offre culturelle en France - Tous droits réservés</p>
     <p> Les Étudiants à l'initiative du projet <a href="https://www.linkedin.com/in/blandine-nahorny/">Blandine NAHORNY</a> | <a href="https://www.linkedin.com/in/matys-ouvrard-ba9832293/">Matys OUVRARD</a> | <a href="https://www.linkedin.com/in/viktor-ghirardelli/">Viktor GHIRARDELLI</a></p>
   </footer>
 
-  <!-- Ajouter le script jQuery -->
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-  <!-- Script pour gérer les options actives et rendre les cards cliquables -->
   <script>
     $(".option").click(function() {
       const isActive = $(this).hasClass("active");
       if (!isActive) {
-        // Réinitialiser les autres cards
         $(".option").removeClass("active");
 
-        // Ajouter l'état actif à la card cliquée
         $(this).addClass("active");
       } else {
-        // Si la card est déjà active, redirection
         const link = $(this).data("link");
         window.location.href = link;
       }

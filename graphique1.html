@@ -9,8 +9,8 @@
       font-family: 'Roboto', sans-serif;
       margin: 0;
       padding: 0;
-      background-color: #131313; /* Fond gris foncé */
-      color: white; /* Texte en blanc */
+      background-color: #131313;
+      color: white;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -44,7 +44,7 @@
       max-width: 1000px;
       height: 650px;
       margin: 20px auto;
-      background-color: #1C1C1C; /* Fond gris foncé pour le conteneur du graphique */
+      background-color: #1C1C1C;
       border-radius: 10px;
       padding: 20px;
     }
@@ -54,8 +54,8 @@
       margin: 20px auto;
       font-size: 1em;
       padding: 10px;
-      background-color: #333; /* Fond gris pour le sélecteur */
-      color: white; /* Texte blanc pour le sélecteur */
+      background-color: #333;
+      color: white;
       border: none;
       border-radius: 5px;
       transition: background-color 0.3s ease;
@@ -70,44 +70,35 @@
 
   <h2>Graphique des Thématiques par Musée et par Département</h2>
 
-  <!-- Bouton retour à l'accueil -->
   <a href="index.html" class="btn-back">Retour à l'accueil</a>
 
-  <!-- Menu déroulant pour sélectionner le département -->
   <select id="departementSelect">
     <option value="Tous">Tous les Départements</option>
   </select>
 
-  <!-- Conteneur pour le graphique -->
   <div id="chartContainer"></div>
 
-  <!-- Import Plot.js et d3.js -->
   <script type="module">
     import * as Plot from "https://cdn.jsdelivr.net/npm/@observablehq/plot@0.6/+esm";
     import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
 
     let musees = [];
-    let departements = new Set(); // Pour stocker les départements
+    let departements = new Set();
 
-    // Fonction pour créer le graphique
     function renderChart(filteredData) {
-      // Group by theme and count occurrences
       const themeCounts = d3.rollups(
         filteredData,
         v => v.length,
         d => d.theme
       ).map(([theme, count]) => ({ theme, count }))
-        .sort((a, b) => b.count - a.count); // Sort by count
+        .sort((a, b) => b.count - a.count);
 
-      const topThemes = themeCounts.slice(0, 15); // Montrer uniquement les 15 thématiques principales
+      const topThemes = themeCounts.slice(0, 15);
 
-      // Supprimer le graphique précédent, s'il existe
       document.getElementById('chartContainer').innerHTML = '';
 
-      // Calculer la valeur maximale pour ajuster l'échelle Y dynamiquement
       const maxCount = d3.max(topThemes, d => d.count);
 
-      // Render the chart
       const chart = Plot.plot({
         title: "Top 15 des Thématiques des Musées",
         width: 800,
@@ -122,9 +113,9 @@
         y: {
           label: "Nombre de musées",
           grid: true,
-          domain: [0, maxCount],  // Ajustement dynamique en fonction des données
-          ticks: 5, // Contrôle du nombre de ticks
-          tickFormat: d3.format("d") // Afficher seulement les nombres entiers
+          domain: [0, maxCount],
+          ticks: 5,
+          tickFormat: d3.format("d")
         },
         marks: [
           Plot.barY(topThemes, {
@@ -145,7 +136,6 @@
       document.getElementById('chartContainer').appendChild(chart);
     }
 
-    // Charger les données JSON
     fetch('musee-thematique.json')
       .then(response => response.json())
       .then(data => {
@@ -153,13 +143,11 @@
           theme: museum.Domaine_thematique,
           name: museum.Nom_officiel,
           departement: museum.Departement,
-          ville: museum.Ville // Inclure la ville
+          ville: museum.Ville
         }));
 
-        // Récupérer les départements uniques
         musees.forEach(museum => departements.add(museum.departement));
 
-        // Ajouter les options de département au menu déroulant
         const departementSelect = document.getElementById("departementSelect");
         departements.forEach(departement => {
           const option = document.createElement("option");
@@ -168,19 +156,15 @@
           departementSelect.appendChild(option);
         });
 
-        // Afficher le graphique pour tous les départements par défaut
         renderChart(musees);
 
-        // Ajouter un événement pour changer le département sélectionné
         departementSelect.addEventListener('change', () => {
           const selectedDepartement = departementSelect.value;
 
-          // Filtrer les données par département
           const filteredData = selectedDepartement === "Tous"
             ? musees
             : musees.filter(museum => museum.departement === selectedDepartement);
 
-          // Afficher le graphique pour le département sélectionné
           renderChart(filteredData);
         });
       })

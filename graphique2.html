@@ -83,17 +83,15 @@
 
     let museumData;
 
-    // Charger les données JSON des musées
     fetch('frequentation-des-musees-de-france.json')
       .then(response => response.json())
       .then(data => {
         museumData = data;
         populateDepartmentOptions();
         populateMuseeOptions();
-        renderChart(); // Générer le graphique initial avec toutes les données
+        renderChart();
       });
 
-    // Fonction pour remplir le menu déroulant des départements
     function populateDepartmentOptions() {
       const departmentSelect = document.getElementById('selectedDepartment');
       const uniqueDepartments = [...new Set(museumData.map(m => m.nomdep))];
@@ -105,11 +103,10 @@
       });
     }
 
-    // Fonction pour remplir le menu déroulant des musées en fonction du département sélectionné
     function populateMuseeOptions() {
       const selectedDepartment = document.getElementById('selectedDepartment').value;
       const museeSelect = document.getElementById('selectedMusee');
-      museeSelect.innerHTML = '<option value="Tous les musées">Tous les musées</option>'; // Réinitialiser les options des musées
+      museeSelect.innerHTML = '<option value="Tous les musées">Tous les musées</option>';
 
       let filteredMuseums = museumData;
       if (selectedDepartment !== 'Toute la France') {
@@ -125,7 +122,6 @@
       });
     }
 
-    // Fonction pour nettoyer et préparer les données pour le graphique
     function cleanData(data) {
       return data.map(museum => ({
         category: 'Payant',
@@ -138,12 +134,10 @@
       })));
     }
 
-    // Fonction pour rendre le graphique
     function renderChart() {
       const selectedDepartment = document.getElementById('selectedDepartment').value;
       const selectedMusee = document.getElementById('selectedMusee').value;
 
-      // Filtrer les données selon le département et le musée sélectionnés
       let filteredData = museumData;
       if (selectedDepartment !== 'Toute la France') {
         filteredData = filteredData.filter(d => d.nomdep === selectedDepartment);
@@ -152,13 +146,10 @@
         filteredData = filteredData.filter(d => d.nom_du_musee === selectedMusee);
       }
 
-      // Nettoyer les données
       const franceDataFilteredPercentage = cleanData(filteredData);
 
-      // Nettoyer la zone du graphique
       document.getElementById('chartContainer').innerHTML = '';
 
-      // Afficher le graphique avec Plot.js
       const chart = Plot.plot({
         y: {
           label: "Pourcentage des entrées (%)",
@@ -195,11 +186,9 @@
         },
       });
 
-      // Ajouter le graphique au conteneur
       document.getElementById('chartContainer').appendChild(chart);
     }
 
-    // Ajouter des événements pour mettre à jour le graphique et le menu des musées
     document.getElementById('selectedDepartment').addEventListener('change', () => {
       populateMuseeOptions();
       renderChart();

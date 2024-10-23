@@ -10,8 +10,8 @@
       font-family: 'Roboto', sans-serif;
       margin: 0;
       padding: 0;
-      background-color: #131313; /* Fond gris foncé */
-      color: white; /* Texte en blanc */
+      background-color: #131313;
+      color: white;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -76,7 +76,6 @@
 
 <h2>Répartition des musées en France</h2>
 
-<!-- Bouton retour à l'accueil -->
 <a href="index.html" class="btn-back">Retour à l'accueil</a>
 
 <div class="buttons">
@@ -86,42 +85,38 @@
 
 <div id="map"></div>
 
-<!-- Leaflet.js pour afficher la carte -->
 <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
 <script src="https://d3js.org/d3.v6.min.js"></script>
 
 <script>
-  const map = L.map('map').setView([46.603354, 1.888334], 6); // Centre de la France
+  const map = L.map('map').setView([46.603354, 1.888334], 6);
 
-  // Ajout d'une couche de tuiles OpenStreetMap
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution: '© OpenStreetMap'
   }).addTo(map);
 
-  let currentMode = 'total'; // Par défaut, afficher par nombre de musées
+  let currentMode = 'total';
 
-  // Charger les données des départements (GeoJSON)
   let departementData;
-  fetch('departements.geojson') // Assurez-vous que ce fichier est accessible
+  fetch('departements.geojson')
     .then(response => response.json())
     .then(geojson => {
       departementData = geojson;
       renderMap();
     });
 
-  // Charger les données des musées (JSON)
+
   let museeData;
-  fetch('liste-musees-2022.json') // Assurez-vous que ce fichier est accessible
+  fetch('liste-musees-2022.json')
     .then(response => response.json())
     .then(data => {
       museeData = data;
       renderMap();
     });
 
-  // Charger les données de population
+
   const population_by_department = {
-      // Charger les données de population
     "Seine-Maritime": 12669287,
   "Eure-et-Loir": 4347918,
   "Maine-et-Loire": 8209092,
@@ -225,9 +220,9 @@
   };
 
   function renderMap() {
-    if (!departementData || !museeData) return; // Attendre que les deux jeux de données soient chargés
+    if (!departementData || !museeData) return;
 
-    // Comptage des musées par département
+
     const museums_count_by_department = museeData.reduce((acc, museum) => {
       const dept = museum["Département"];
       if (dept) {
@@ -236,7 +231,6 @@
       return acc;
     }, {});
 
-    // Création de l'objet combiné avec la densité de musées par département
     const combined_data = Object.keys(museums_count_by_department).map(dept => {
       const population = population_by_department[dept] || 0;
       const museums_count = museums_count_by_department[dept] || 0;
@@ -249,19 +243,16 @@
       };
     });
 
-    // Définir l'échelle de couleur pour le nombre total de musées
     const maxMusees = Math.max(...combined_data.map(d => d.musées));
     const colorScaleMusees = d3.scaleQuantize()
       .domain([0, maxMusees])
       .range(["#f2f0f7", "#dadaeb", "#bcbddc", "#9e9ac8", "#807dba", "#6a51a3", "#54278f", "#3f007d"]);
 
-    // Définir l'échelle de couleur pour la densité de musées
     const maxDensity = Math.max(...combined_data.map(d => d.museums_per_100000_inhabitants));
     const colorScaleDensity = d3.scaleQuantize()
       .domain([0, maxDensity])
       .range(["#f2f0f7", "#dadaeb", "#bcbddc", "#9e9ac8", "#807dba", "#6a51a3", "#54278f", "#3f007d"]);
 
-    // Ajouter les départements sur la carte avec des couleurs
     function updateMap(mode) {
       L.geoJSON(departementData, {
         style: function (feature) {
@@ -283,23 +274,20 @@
           const count = data ? data.musées : 0;
           const density = data ? data.museums_per_100000_inhabitants.toFixed(2) : 'Données non disponibles';
 
-          // Utiliser bindTooltip pour afficher les infos au survol (hover)
           layer.bindTooltip(`
             <strong>${dept}</strong><br>
             Population: ${population}<br>
             Musées: ${count}<br>
             Musées pour 100 000 habitants: ${density}
           `, {
-            sticky: true, // Garder la bulle collée au curseur lors du survol
+            sticky: true,
           });
         }
       }).addTo(map);
     }
 
-    // Premier rendu basé sur le mode par défaut (nombre total de musées)
     updateMap(currentMode);
 
-    // Ajouter des événements pour basculer entre les modes
     document.getElementById('btnTotalMusees').addEventListener('click', () => {
       currentMode = 'total';
       map.eachLayer(layer => {
