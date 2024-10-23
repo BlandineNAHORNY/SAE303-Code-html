@@ -7,4 +7,4 @@ Groupe 09 : Blandine Nahorny - Viktor Ghirardelli - Matys Ouvrard
 
 
 
-  Nous avons utiliser de l'AlpineJs pour la carte 1 & 2.
+  Nous avons utilisés de l'AlpineJs pour la carte 1 & 2.
