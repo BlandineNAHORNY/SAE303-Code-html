@@ -9,21 +9,19 @@
       font-family: 'Roboto', sans-serif;
       margin: 0;
       padding: 0;
-      background-color: #131313; /* Fond gris foncé */
-      color: white; /* Texte en blanc */
+      background-color: #131313;
+      color: white;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       min-height: 100vh;
     }
-    
     h2 {
       color: white;
       text-align: center;
       margin-bottom: 20px;
     }
-    
     .btn-back {
       display: inline-block;
       padding: 10px 20px;
@@ -34,66 +32,51 @@
       border-radius: 5px;
       transition: background-color 0.3s ease;
     }
-
     .btn-back:hover {
       background-color: #4A7BC1;
     }
-
     #chartContainer {
       width: 90%;
       max-width: 1000px;
       height: 500px;
       margin: 20px auto;
-      background-color: #1C1C1C; /* Fond gris foncé pour le conteneur du graphique */
+      background-color: #1C1C1C;
       border-radius: 10px;
       padding: 20px;
     }
-
     .inputs {
       text-align: center;
       margin: 20px 0;
     }
-
     select {
       font-size: 1em;
       padding: 10px;
       margin: 5px;
       cursor: pointer;
-      background-color: #333; /* Fond gris pour les sélecteurs */
-      color: white; /* Texte blanc pour les sélecteurs */
+      background-color: #333;
+      color: white;
       border: none;
       border-radius: 5px;
       transition: background-color 0.3s ease;
     }
-
     select:hover {
       background-color: #444;
     }
   </style>
 </head>
 <body>
-
   <h2>Répartition des Entrées Payantes et Gratuites des Musées</h2>
-
-  <!-- Bouton retour à l'accueil -->
   <a href="index.html" class="btn-back">Retour à l'accueil</a>
-       
-  <!-- Menu déroulant pour sélectionner un département et un musée -->
   <div class="inputs">
     <select id="selectedDepartment">
       <option value="Toute la France">Toute la France</option>
-      <!-- Les options des départements seront ajoutées dynamiquement -->
     </select>
     <select id="selectedMusee">
       <option value="Tous les musées">Tous les musées</option>
-      <!-- Les options des musées seront ajoutées dynamiquement -->
     </select>
   </div>
-
-  <!-- Conteneur pour le graphique -->
   <div id="chartContainer"></div>
 
-  <!-- Import Plot.js et d3.js -->
   <script type="module">
     import * as Plot from "https://cdn.jsdelivr.net/npm/@observablehq/plot@0.6/+esm";
     import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
@@ -113,23 +96,31 @@
     // Fonction pour remplir le menu déroulant des départements
     function populateDepartmentOptions() {
       const departmentSelect = document.getElementById('selectedDepartment');
-      const uniqueDepartments = [...new Set(museumData.map(m => m.nomdep))]; // Récupérer tous les départements uniques
-      uniqueDepartments.forEach(dept => {
+      const uniqueDepartments = [...new Set(museumData.map(m => m.nomdep))];
+      uniqueDepartments.forEach(department => {
         const option = document.createElement('option');
-        option.value = dept;
-        option.textContent = dept;
+        option.value = department;
+        option.textContent = department;
         departmentSelect.appendChild(option);
       });
     }
 
-    // Fonction pour remplir le menu déroulant des musées
+    // Fonction pour remplir le menu déroulant des musées en fonction du département sélectionné
     function populateMuseeOptions() {
+      const selectedDepartment = document.getElementById('selectedDepartment').value;
       const museeSelect = document.getElementById('selectedMusee');
-      const uniqueMusees = [...new Set(museumData.map(m => m.nom_du_musee))]; // Récupérer tous les musées uniques
-      uniqueMusees.forEach(mus => {
+      museeSelect.innerHTML = '<option value="Tous les musées">Tous les musées</option>'; // Réinitialiser les options des musées
+
+      let filteredMuseums = museumData;
+      if (selectedDepartment !== 'Toute la France') {
+        filteredMuseums = filteredMuseums.filter(m => m.nomdep === selectedDepartment);
+      }
+
+      const uniqueMusees = [...new Set(filteredMuseums.map(m => m.nom_du_musee))];
+      uniqueMusees.forEach(museum => {
         const option = document.createElement('option');
-        option.value = mus;
-        option.textContent = mus;
+        option.value = museum;
+        option.textContent = museum;
         museeSelect.appendChild(option);
       });
     }
@@ -138,11 +129,11 @@
     function cleanData(data) {
       return data.map(museum => ({
         category: 'Payant',
-        value: museum.payant && museum.total ? (museum.payant / museum.total) * 100 : 0,  // Calculer le pourcentage pour Payant
+        value: museum.payant && museum.total ? (museum.payant / museum.total) * 100 : 0,
         actualValue: museum.payant || 0
       })).concat(data.map(museum => ({
         category: 'Gratuit',
-        value: museum.gratuit && museum.total ? (museum.gratuit / museum.total) * 100 : 0,  // Calculer le pourcentage pour Gratuit
+        value: museum.gratuit && museum.total ? (museum.gratuit / museum.total) * 100 : 0,
         actualValue: museum.gratuit || 0
       })));
     }
@@ -154,11 +145,9 @@
 
       // Filtrer les données selon le département et le musée sélectionnés
       let filteredData = museumData;
-
       if (selectedDepartment !== 'Toute la France') {
         filteredData = filteredData.filter(d => d.nomdep === selectedDepartment);
       }
-
       if (selectedMusee !== 'Tous les musées') {
         filteredData = filteredData.filter(d => d.nom_du_musee === selectedMusee);
       }
@@ -177,36 +166,32 @@
         },
         x: {
           label: "Catégories",
-          domain: ["Gratuit", "Payant"],  // Les deux catégories : Payant et Gratuit
-          tickRotate: -30  // Rotation des étiquettes sur l'axe X
+          domain: ["Gratuit", "Payant"],
+          tickRotate: -30
         },
         marks: [
-          Plot.barY(franceDataFilteredPercentage.filter(d => d.category === "Payant"), { 
-            x: "category", 
-            y: "value",  // Pourcentage d'entrées
-            fill: "red",  // Couleur rouge pour les entrées payantes
+          Plot.barY(franceDataFilteredPercentage.filter(d => d.category === "Payant"), {
+            x: "category",
+            y: "value",
+            fill: "red",
             title: d => `Catégorie: Payant 💰\nPourcentage: ${d.value.toFixed(2)}%\nNombre d'entrées: ${d.actualValue.toLocaleString('fr-FR')}`
           }),
-          Plot.barY(franceDataFilteredPercentage.filter(d => d.category === "Gratuit"), { 
-            x: "category", 
-            y: "value",  // Pourcentage d'entrées
-            fill: "green",  // Couleur verte pour les entrées gratuites
+          Plot.barY(franceDataFilteredPercentage.filter(d => d.category === "Gratuit"), {
+            x: "category",
+            y: "value",
+            fill: "green",
             title: d => `Catégorie: Gratuit 🎟️\nPourcentage: ${d.value.toFixed(2)}%\nNombre d'entrées: ${d.actualValue.toLocaleString('fr-FR')}`
           })
         ],
-        height: 400,  // Hauteur du graphique
-        marginLeft: 60,  // Ajustement des marges
+        height: 400,
+        marginLeft: 60,
         marginBottom: 50,
-
-        // Titre du graphique
         caption: `Répartition en Pourcentage des Entrées Payantes et Gratuites des Musées (${selectedDepartment}, ${selectedMusee}, 2014)`,
-
-        // Légende avec des emojis
         color: {
           legend: true,
-          domain: ["Gratuit", "Payant"],  // Catégories dans la légende
-          range: ["green", "red"],  // Couleurs pour chaque catégorie
-          label: "🎟️ Gratuit vs 💰 Payant"  // Texte de la légende
+          domain: ["Gratuit", "Payant"],
+          range: ["green", "red"],
+          label: "🎟️ Gratuit vs 💰 Payant"
         },
       });
 
@@ -214,10 +199,12 @@
       document.getElementById('chartContainer').appendChild(chart);
     }
 
-    // Ajouter des événements pour mettre à jour le graphique
-    document.getElementById('selectedDepartment').addEventListener('change', renderChart);
+    // Ajouter des événements pour mettre à jour le graphique et le menu des musées
+    document.getElementById('selectedDepartment').addEventListener('change', () => {
+      populateMuseeOptions();
+      renderChart();
+    });
     document.getElementById('selectedMusee').addEventListener('change', renderChart);
   </script>
-
 </body>
 </html>
